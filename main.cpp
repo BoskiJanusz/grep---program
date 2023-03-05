@@ -8,35 +8,14 @@
 namespace fs = std::filesystem;
 namespace po = boost::program_options;
 
-void wordsFinder(const std::string filePath, const std::string  word)
-{
-    std::ifstream istrm(filePath, std::ios::binary);
-    std::string line;
-    while(getline(istrm, line))
-    {
-        if (line.find(word) != std::string::npos)
-        {
-            std::cout << filePath << std::endl;
-        }
-    }
-}
+void wordsFinder(const std::string &filePath, const std::string  &word, const std::string  &resultFileName, const std::string  &logFileName);
+void saveResultFile(const std::string  &resultFileName, const std::string &pathFileFound, const int &lineNumber, const std::string &lineContent);
+
 
 /*todo
 add directories and files for program 
 */
 
-
-/*todo
-function result txt file 
-*/
-
-/*todo
-function result log file 
-*/
-
-/*todo
-function dir path 
-*/
 
 int main(int argc, char **argv)
 {
@@ -60,34 +39,53 @@ int main(int argc, char **argv)
         .options (desc).run (), vm);
     po::notify (vm);
 
-    if (vm.count ("help")){
-        std::cerr << desc << "\n";
-        return 1;
-    }
-
-if(vm.count("input"))
+if (vm.count ("help")){
+    std::cerr << desc << "\n";
+    return 1;
+}
+else if(vm.count("input"))
 {
     if(vm.count("dir"))
     {
         for (auto const& directories : fs::recursive_directory_iterator{directionPath}) 
         {
-            wordsFinder(directories.path(), word); 
+            if(directories.path().filename() != resultsFileName)
+            {
+                wordsFinder(directories.path(), word, resultsFileName, logFileName); 
+            }
         }
-    }
-    if(vm.count("log_file"))
-    {
-        /*todo*/
-    }
-    if(vm.count("result_file"))
-    {
-        /*todo*/
     }
     if(vm.count("threads"))
     {
         /*todo*/
     }
 }
- 
-   
+else if(!vm.count("input"))
+{
+    std::cout << "please input characters to find\n";
+}
+
     return 0;
+}
+
+void wordsFinder(const std::string &filePath, const std::string  &word, const std::string  &resultFileName, const std::string  &logFileName)
+{
+    std::ifstream istrm(filePath, std::ios::binary);
+    std::string line;
+    int lineNumber = 1;
+    while(getline(istrm, line))
+    {
+        if (line.find(word) != std::string::npos)
+        {
+            std::cout << filePath << std::endl;
+            saveResultFile(resultFileName, filePath, lineNumber, line);
+        }
+        lineNumber++;
+    }
+}
+
+void saveResultFile(const std::string  &resultFileName, const std::string &pathFileFound, const int &lineNumber, const std::string &lineContent)
+{
+    std::ofstream ostrm(resultFileName, std::ios_base::app);
+    ostrm  << pathFileFound << ":" << lineNumber << ":" << lineContent << "\n";
 }
